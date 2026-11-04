@@ -1,0 +1,28 @@
+Prism GitHub Pages upload
+
+1. Open your existing GitHub repository and choose Add file > Upload files.
+2. Drag the docs FOLDER next to this instruction file into the upload area.
+3. Confirm that the new paths are docs/index.html,
+   docs/THIRD_PARTY_NOTICES.md and docs/index.sha256. Commit the upload.
+4. In repository Settings > Pages, choose Deploy from a branch.
+5. Select main (or your actual default branch), then /docs. Click Save.
+6. Wait for GitHub Pages deployment to finish and open the site URL shown there.
+
+Keep the existing repository-root index.html and source folders unchanged.
+The root index.html is the development template; docs/index.html is the
+self-contained browser-ready app with its scripts, styles and libraries embedded.
+
+No hidden files, npm installation, build workflow, backend or API keys are
+needed for this deployment. This folder contains the compiled website only.
+Your editable source remains in the repository you have already uploaded.
+
+You do not need to upload node_modules, artifacts, .pnpm-store, .agents,
+.superpowers, hosted, or the complete local project folder for this site.
+The Windows launcher requires the separate dist folder for local use;
+it is not used by GitHub Pages.
+
+Future app changes require rebuilding the app and replacing docs/index.html
+with the new self-contained build, plus updating its notices and checksum.
+
+Official GitHub instructions:
+https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
