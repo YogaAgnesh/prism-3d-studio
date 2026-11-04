@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'self'; worker-src blob:">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="A private, local-only studio for creating interactive 3D charts from Excel and CSV data.">
+  <title>Prism — 3D Visualization Studio</title>
+  <link rel="stylesheet" href="./src/styles.css" data-inline="styles">
+</head>
+<body>
+  <a class="skip-link" href="#studio-view">Skip to chart workspace</a>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup" aria-label="Prism 3D Visualization Studio">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <div class="brand-name">PRISM</div>
+          <div class="brand-subtitle">3D Visualization Studio</div>
+        </div>
+      </div>
+      <div class="topbar-center" id="file-summary" aria-live="polite">
+        <span class="privacy-dot"></span>
+        <span>Your data stays on this device</span>
+      </div>
+      <div class="topbar-actions">
+        <div class="mode-switch hidden" id="mode-switch" aria-label="Authoring mode">
+          <button class="mode-option active" data-mode="guided" type="button" aria-pressed="true">Guided</button>
+          <button class="mode-option" data-mode="advanced" type="button" aria-pressed="false">Advanced</button>
+        </div>
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch theme"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg></button>
+        <button class="button button-ghost hidden" id="new-file-button" type="button">
+          <span aria-hidden="true">＋</span> New file
+        </button>
+        <button class="button button-ghost hidden" id="import-project-button" type="button">Open project</button>
+        <button class="button button-ghost hidden" id="export-json-button" type="button">
+          <span aria-hidden="true">↓</span> Save project
+        </button>
+        <details class="topbar-overflow hidden" id="topbar-overflow">
+          <summary class="button button-ghost" aria-label="More workspace actions">More <span aria-hidden="true">⌄</span></summary>
+          <div class="topbar-overflow-menu">
+            <button class="button button-ghost hidden" id="view-code-button" type="button">View Plotly code</button>
+            <button class="button button-ghost hidden" id="publish-button" type="button">Publish briefing</button>
+          </div>
+        </details>
+        <button class="button button-primary hidden" id="export-html-button" type="button">
+          <span aria-hidden="true">↗</span> Export interactive HTML
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="welcome" id="welcome-view">
+        <div class="welcome-copy">
+          <div class="eyebrow"><span class="eyebrow-spark">✦</span> Local-only 3D chart maker</div>
+          <h1>Give your data<br><span class="headline-accent">another dimension.</span></h1>
+          <p class="welcome-lede">Explore spreadsheets, measurements, records and JSON tables in interactive 3D. Prism suggests useful views and explains its choices. Every row stays on your device.</p>
+
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose or drop a spreadsheet">
+            <div class="dropzone-orbit" aria-hidden="true">
+              <span class="orbit-dot dot-a"></span>
+              <span class="orbit-dot dot-b"></span>
+              <span class="orbit-dot dot-c"></span>
+              <div class="file-glyph">↗</div>
+            </div>
+            <div class="dropzone-title">Drop your spreadsheet here</div>
+            <div class="dropzone-copy">or choose a local file to begin</div>
+            <button class="button button-primary button-large" id="choose-file-button" type="button">Choose a dataset</button>
+            <div class="import-progress hidden" id="import-progress" aria-live="polite">
+              <div class="import-progress-head"><strong id="import-file-name">Preparing spreadsheet</strong><span id="import-progress-value">0%</span></div>
+              <div class="import-progress-track" role="progressbar" aria-label="Spreadsheet import progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="import-progress-bar"></i></div>
+              <span id="import-status-text">Reading file securely on this device</span>
+            </div>
+            <div class="file-types"><span>Excel / ODS</span><span>CSV / TSV</span><span>JSON / NDJSON</span><span>Up to 50,000 rows × 100 columns</span></div>
+          </div>
+
+          <div class="welcome-actions">
+            <label class="sample-label" for="sample-domain">Try a sample</label>
+            <select id="sample-domain" aria-label="Sample dataset"><option value="business">Business pipeline</option><option value="sensors">Sensor measurements</option><option value="categories">Category-only records</option></select>
+            <button class="text-button" id="sample-data-button" type="button">Explore sample</button>
+            <button class="text-button" id="welcome-import-settings" type="button">Import settings</button>
+            <span class="security-note"><span>⌁</span> Parsed entirely in your browser</span>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-card hero-card-back">
+            <div class="mini-label">DATA SURFACE</div>
+            <div class="mini-ridges">
+              <i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+          </div>
+          <div class="hero-card hero-card-front">
+            <div class="hero-card-head">
+              <div><span class="mini-kicker">EXPLORE YOUR DATA</span><strong>Patterns in perspective</strong></div>
+              <span class="hero-chip">3D Bubble</span>
+            </div>
+            <div class="hero-grid">
+              <div class="grid-plane plane-back"></div>
+              <div class="grid-plane plane-floor"></div>
+              <i class="hero-bubble b1"></i><i class="hero-bubble b2"></i><i class="hero-bubble b3"></i>
+              <i class="hero-bubble b4"></i><i class="hero-bubble b5"></i><i class="hero-bubble b6"></i>
+              <i class="hero-bubble b7"></i><i class="hero-bubble b8"></i>
+            </div>
+            <div class="hero-metrics">
+              <div><span>Pipeline</span><strong>$42.8M</strong><small class="metric-up">↑ 19.6%</small></div>
+              <div><span>Coverage</span><strong>3.7×</strong><small class="metric-cyan">68 opportunities</small></div>
+              <div><span>Avg. probability</span><strong>62%</strong><small class="metric-coral">+8.4 pts</small></div>
+            </div>
+          </div>
+          <div class="floating-badge badge-types"><span>Auto-detected</span><b>$</b><b>%</b><b>⌚</b><b>Aa</b></div>
+          <div class="floating-badge badge-local"><span class="privacy-dot"></span> Private by design</div>
+        </div>
+      </section>
+
+      <section class="studio hidden" id="studio-view" aria-label="3D chart workspace">
+        <aside class="panel data-panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-kicker">SOURCE</span>
+              <h2>Data fields</h2>
+            </div>
+            <button class="icon-button" id="preview-data-button" type="button" aria-label="Preview data" title="Preview data">▤</button>
+          </div>
+
+          <div class="source-card">
+            <div class="source-icon">X</div>
+            <div class="source-info"><strong id="source-file-name">Workbook.xlsx</strong><span id="source-meta">0 rows · 0 fields</span></div>
+            <span class="source-ready" title="Loaded locally">●</span>
+          </div>
+
+          <label class="control-label" for="sheet-select">Sheet or table</label>
+          <div class="select-wrap"><select id="sheet-select"></select><span>⌄</span></div>
+          <button class="text-button" id="source-import-settings" type="button">Review import settings</button>
+          <p id="source-diagnostics" class="section-copy" role="status"></p>
+
+          <div class="field-toolbar">
+            <label class="search-box"><span>⌕</span><input id="field-search" type="search" placeholder="Search columns" autocomplete="off"></label>
+            <span class="field-count" id="field-count">0</span>
+          </div>
+          <div class="field-legend" id="field-legend"></div>
+          <div class="data-intelligence-card" id="data-intelligence-card" aria-live="polite">
+            <div><span class="panel-kicker">PRISMATIC INTELLIGENCE</span><strong>Profile a spreadsheet to begin</strong></div>
+          </div>
+          <div class="recommendation-panel" id="recommendations" aria-label="Suggested charts"></div>
+          <button class="button button-ghost panel-action hidden" id="add-calculation-button" type="button">＋ Calculated field</button>
+          <div class="field-list" id="field-list" role="list"></div>
+
+          <div class="panel-footer privacy-footer">
+            <span class="lock-icon">⌾</span>
+            <div><strong>Memory only</strong><span>Reloading clears your data</span></div>
+          </div>
+        </aside>
+
+        <section class="workspace">
+          <div class="chart-type-bar">
+            <div class="chart-type-heading"><span class="panel-kicker">VISUAL</span><strong>Choose a 3D style</strong></div>
+            <div class="chart-type-list" id="chart-type-list" role="radiogroup" aria-label="3D chart style"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-toolbar">
+              <div class="chart-title-group">
+                <span class="chart-live-dot"></span>
+                <div><strong id="chart-toolbar-title">Sales opportunity landscape</strong><span id="chart-toolbar-subtitle">Map compatible fields to begin</span></div>
+              </div>
+              <div class="chart-toolbar-actions">
+                <button class="button button-primary compact-button" id="save-chart-button" type="button">Save chart</button>
+                <button class="icon-button" id="chart-table-button" type="button" title="View chart data" aria-label="View chart data">▤</button>
+                <button class="icon-button" id="reset-camera-button" type="button" title="Reset camera" aria-label="Reset camera">↻</button>
+                <button class="icon-button" id="fullscreen-button" type="button" title="Fullscreen chart" aria-label="Fullscreen chart">⛶</button>
+              </div>
+            </div>
+            <section class="story-rail" id="story-rail" aria-label="Story Builder">
+              <div class="story-rail-heading"><span class="story-mark" aria-hidden="true"></span><div><span class="panel-kicker">STORY BUILDER</span><strong>Turn this chart into a narrative</strong></div></div>
+              <div class="story-chapters" id="story-chapters" role="list" aria-label="Story chapters"><span class="story-empty">Capture a chart view to create the opening chapter.</span></div>
+              <div class="story-rail-actions">
+                <button class="button button-ghost compact-button" id="capture-story-button" type="button">Capture scene</button>
+                <button class="button button-primary compact-button" id="present-story-button" type="button" disabled>Present</button>
+              </div>
+            </section>
+            <div class="plot-shell" id="plot-shell">
+              <article class="story-overlay hidden" id="story-overlay" aria-live="polite">
+                <span id="story-overlay-number">Chapter 1</span>
+                <h3 id="story-overlay-title">Opening view</h3>
+                <p id="story-overlay-takeaway"></p>
+                <div class="story-overlay-metrics" id="story-overlay-metrics"></div>
+              </article>
+              <div class="chart-placeholder" id="chart-placeholder">
+                <div class="placeholder-cube"><i></i><i></i><i></i></div>
+                <strong>Your 3D chart will appear here</strong>
+                <span>Map the highlighted fields in the Build panel</span>
+              </div>
+              <div class="plot" id="plot" role="img" aria-label="Interactive 3D chart" aria-describedby="chart-insight-summary"></div>
+              <p class="sr-only" id="chart-insight-summary" aria-live="polite">Map the required fields to generate a chart summary.</p>
+              <div class="plot-loading hidden" id="plot-loading"><span class="spinner"></span>Building your chart…</div>
+            </div>
+            <div class="chart-statusbar">
+              <div id="chart-status"><span class="status-dot status-waiting"></span>Waiting for required fields</div>
+              <div class="chart-tip"><span>Mouse:</span> drag to orbit · wheel to zoom · shift + drag to pan</div>
+            </div>
+          </div>
+          <section class="saved-chart-region" aria-labelledby="saved-charts-heading"><div class="saved-chart-header"><span class="panel-kicker">WORKSPACE</span><strong id="saved-charts-heading">Saved charts</strong></div><div class="chart-tray" id="chart-tray" aria-label="Saved charts"></div></section>
+        </section>
+
+        <aside class="panel config-panel">
+          <div class="config-tabs" role="tablist">
+            <button class="config-tab active" id="tab-build" data-tab="build" type="button" role="tab" aria-selected="true" aria-controls="pane-build">Build</button>
+            <button class="config-tab" id="tab-appearance" data-tab="appearance" type="button" role="tab" aria-selected="false" aria-controls="pane-appearance">Appearance</button>
+            <button class="config-tab" id="tab-scene" data-tab="scene" type="button" role="tab" aria-selected="false" aria-controls="pane-scene">Axes &amp; Scene</button>
+            <button class="config-tab" id="tab-interaction" data-tab="interaction" type="button" role="tab" aria-selected="false" aria-controls="pane-interaction">Interaction</button>
+            <button class="config-tab" id="tab-quality" data-tab="quality" type="button" role="tab" aria-selected="false" aria-controls="pane-quality">Quality</button>
+          </div>
+
+          <div class="config-scroll">
+            <div class="config-section tab-pane active" id="pane-build" data-pane="build" role="tabpanel" aria-labelledby="tab-build">
+              <div class="section-heading"><div><span class="panel-kicker">FIELD MAPPING</span><h3 id="mapping-chart-name">3D Bubble</h3></div><button class="small-link" id="auto-map-button" type="button">Auto-map</button></div>
+              <p class="section-copy" id="mapping-chart-description">Explore relationships across three measures.</p>
+              <div class="mapping-list" id="mapping-list"></div>
+
+              <div class="control-group" id="aggregation-group">
+                <label class="control-label" for="aggregation-select">Aggregation</label>
+                <div class="select-wrap"><select id="aggregation-select"><option value="sum">Sum</option><option value="average">Average</option><option value="count">Count rows</option><option value="minimum">Minimum</option><option value="maximum">Maximum</option></select><span>⌄</span></div>
+              </div>
+              <div class="validation-box" id="validation-box"><span>i</span><p>Choose the required fields to render this chart.</p></div>
+            </div>
+
+            <div class="config-section tab-pane active" id="pane-build-filters" data-pane="build" role="group" aria-label="Filters">
+              <div class="section-heading"><div><span class="panel-kicker">FILTER PIPELINE</span><h3>Shape the view</h3></div><button class="small-link" id="clear-filters-button" type="button">Clear all</button></div>
+              <p class="section-copy">Filter any source or mapped field. Source rows are never changed.</p>
+              <div class="active-filters" id="active-filters"></div>
+              <div class="filter-composer">
+                <label class="control-label" for="filter-field-select">Column</label>
+                <div class="select-wrap"><select id="filter-field-select"></select><span>⌄</span></div>
+                <label class="control-label" for="filter-operator-select">Condition</label>
+                <div class="select-wrap"><select id="filter-operator-select"></select><span>⌄</span></div>
+                <label class="control-label" for="filter-value-input">Value</label>
+                <input class="text-input" id="filter-value-input" autocomplete="off">
+                <div id="filter-second-value-wrap" class="hidden"><label class="control-label" for="filter-value-2-input">And</label><input class="text-input" id="filter-value-2-input" autocomplete="off"></div>
+                <button class="button button-primary full-button" id="add-filter-button" type="button">Add filter</button>
+              </div>
+              <div class="filter-result" id="filter-result" aria-live="polite">No filters · all rows included</div>
+            </div>
+
+            <div class="config-section tab-pane" id="pane-appearance" data-pane="appearance" role="tabpanel" aria-labelledby="tab-appearance">
+              <div class="section-heading"><div><span class="panel-kicker">APPEARANCE</span><h3>Make it yours</h3></div></div>
+              <div class="control-group"><label class="control-label" for="chart-title-input">Chart title</label><input class="text-input" id="chart-title-input" value="Sales opportunity landscape"></div>
+              <div class="control-group"><label class="control-label">Color palette</label><div class="palette-grid" id="palette-grid"></div></div>
+              <div class="control-group" data-feature="marker line"><label class="control-label" for="marker-mode-select">Trace style</label><div class="select-wrap"><select id="marker-mode-select" data-setting="markerMode"><option value="markers">Markers</option><option value="lines">Lines</option><option value="lines+markers">Lines + markers</option></select><span>⌄</span></div></div>
+              <div class="control-group" data-feature="line"><label class="control-label" for="line-width-input">Line width</label><input class="text-input" id="line-width-input" data-setting="lineWidth" data-value-type="number" type="number" min="1" max="16" step="1" value="6"></div>
+              <div class="dual-controls">
+                <label><span class="control-label">Canvas</span><span class="color-input-wrap"><input type="color" id="background-input" value="#f6f8fc"><span id="background-value">#F6F8FC</span></span></label>
+                <label><span class="control-label">Plot area</span><span class="color-input-wrap"><input type="color" id="plot-background-input" value="#ffffff"><span id="plot-background-value">#FFFFFF</span></span></label>
+              </div>
+              <div class="control-group range-control"><div><label class="control-label" for="opacity-input">Opacity</label><output id="opacity-value">90%</output></div><input type="range" id="opacity-input" min="35" max="100" value="90"></div>
+              <div class="control-group range-control"><div><label class="control-label" for="marker-scale-input">Marker scale</label><output id="marker-scale-value">1.0×</output></div><input type="range" id="marker-scale-input" min="50" max="180" value="100"></div>
+              <div class="dual-controls transformation-controls">
+                <label><span class="control-label">Point limit</span><input class="text-input" id="point-limit-input" type="number" min="100" max="8000" step="100" value="8000"></label>
+                <label><span class="control-label">Group limit</span><input class="text-input" id="group-limit-input" type="number" min="10" max="60" step="10" value="60"></label>
+              </div>
+              <p class="section-copy transformation-copy">Limits protect interaction quality. Prism discloses every sampled observation or hidden lower-ranked group.</p>
+              <label class="toggle-row"><div><strong>Grid planes</strong><span>Show spatial reference lines</span></div><input type="checkbox" id="grid-toggle" checked><i></i></label>
+              <div id="surface-controls" data-feature="surface" class="feature-controls">
+                <label class="toggle-row"><div><strong>Bin numeric coordinates</strong><span>Group X and Y into equal-width intervals</span></div><input type="checkbox" data-setting="surfaceBinning"><i></i></label>
+                <label><span class="control-label">Bins per numeric axis (2–50)</span><input class="text-input" type="number" min="2" max="50" value="20" data-setting="surfaceBins" data-value-type="number"></label>
+                <div class="section-heading"><div><span class="panel-kicker">SURFACE</span><h3>Contours &amp; lighting</h3></div></div>
+                <label class="toggle-row"><div><strong>Surface contours</strong><span>Reveal equal-height bands</span></div><input type="checkbox" data-setting="showContours" checked><i></i></label>
+                <label class="toggle-row"><div><strong>Project Z contours</strong><span>Project bands onto the floor plane</span></div><input type="checkbox" data-setting="projectContours" checked><i></i></label>
+                <label class="toggle-row"><div><strong>Connect missing cells</strong><span>Interpolation is disclosed in Quality</span></div><input type="checkbox" data-setting="connectGaps"><i></i></label>
+                <div class="control-group range-control"><div><label class="control-label" for="ambient-light-input">Ambient light</label><output>65%</output></div><input id="ambient-light-input" type="range" min="0" max="100" value="65" data-setting="lighting.ambient" data-value-type="percent"></div>
+              </div>
+            </div>
+
+            <div class="config-section tab-pane" id="pane-scene" data-pane="scene" role="tabpanel" aria-labelledby="tab-scene">
+              <div class="section-heading"><div><span class="panel-kicker">SCENE & AXES</span><h3>Frame the view</h3></div></div>
+              <div class="dual-controls">
+                <label><span class="control-label">Projection</span><span class="select-wrap"><select id="projection-select" data-setting="projection"><option value="perspective">Perspective</option><option value="orthographic">Orthographic</option></select><span>⌄</span></span></label>
+                <label><span class="control-label">Aspect</span><span class="select-wrap"><select id="aspect-mode-select" data-setting="aspectmode"><option value="cube">Balanced cube</option><option value="data">Match data</option><option value="auto">Automatic</option><option value="manual">Manual</option></select><span>⌄</span></span></label>
+              </div>
+              <div class="control-group"><label class="control-label" for="camera-select">Camera preset</label><div class="select-wrap"><select id="camera-select"><option value="perspective">Perspective</option><option value="isometric">Isometric</option><option value="front">Straight front</option><option value="rear">Straight rear</option><option value="left">Straight left</option><option value="right">Straight right</option><option value="top">Straight top</option><option value="custom">Saved custom view</option></select><span>⌄</span></div></div>
+              <label class="toggle-row"><div><strong>Perspective depth</strong><span>Turn off for a technical straight projection</span></div><input type="checkbox" id="perspective-toggle" checked><i></i></label>
+              <label class="toggle-row"><div><strong>Hover spikes</strong><span>Project the hovered point to scene axes</span></div><input type="checkbox" data-setting="showSpikes"><i></i></label>
+              <label class="toggle-row"><div><strong>Zero lines</strong><span>Show the zero reference on numeric axes</span></div><input type="checkbox" data-setting="showZeroLine" checked><i></i></label>
+              <div class="axis-editor" data-axis="x">
+                <div class="axis-heading"><span class="axis-chip axis-x">X</span><strong>X axis</strong><label><input type="checkbox" id="reverse-x"> Reverse</label></div>
+                <input class="text-input" id="x-title-input" placeholder="Axis title">
+                <div class="range-pair"><input class="text-input" id="x-min-input" type="number" placeholder="Auto min"><input class="text-input" id="x-max-input" type="number" placeholder="Auto max"></div>
+              </div>
+              <div class="axis-editor" data-axis="y">
+                <div class="axis-heading"><span class="axis-chip axis-y">Y</span><strong>Y axis</strong><label><input type="checkbox" id="reverse-y"> Reverse</label></div>
+                <input class="text-input" id="y-title-input" placeholder="Axis title">
+                <div class="range-pair"><input class="text-input" id="y-min-input" type="number" placeholder="Auto min"><input class="text-input" id="y-max-input" type="number" placeholder="Auto max"></div>
+              </div>
+              <div class="axis-editor" data-axis="z">
+                <div class="axis-heading"><span class="axis-chip axis-z">Z</span><strong>Z axis</strong><label><input type="checkbox" id="reverse-z"> Reverse</label></div>
+                <input class="text-input" id="z-title-input" placeholder="Axis title">
+                <div class="range-pair"><input class="text-input" id="z-min-input" type="number" placeholder="Auto min"><input class="text-input" id="z-max-input" type="number" placeholder="Auto max"></div>
+              </div>
+            </div>
+
+            <div class="config-section tab-pane" id="pane-interaction" data-pane="interaction" role="tabpanel" aria-labelledby="tab-interaction">
+              <div class="section-heading"><div><span class="panel-kicker">INTERACTION</span><h3>Control the experience</h3></div></div>
+              <label class="toggle-row"><div><strong>Scroll zoom</strong><span>Mouse wheel or trackpad zooms the scene</span></div><input type="checkbox" data-setting="scrollZoom" checked><i></i></label>
+              <label class="toggle-row"><div><strong>Persistent mode bar</strong><span>Keep Plotly interaction tools visible</span></div><input type="checkbox" data-setting="displayModeBar" checked><i></i></label>
+              <div class="control-group"><label class="control-label" for="export-resolution-select">PNG export resolution</label><div class="select-wrap"><select id="export-resolution-select"><option value="1920x1080">Presentation · 1920 × 1080</option><option value="3840x2160">4K presentation · 3840 × 2160</option><option value="2400x1500">Report landscape · 2400 × 1500</option></select><span>⌄</span></div></div>
+              <p class="section-copy">Interactive WebGL remains the primary experience. PNG export uses the selected presentation dimensions.</p>
+            </div>
+
+            <div class="config-section tab-pane" id="pane-quality" data-pane="quality" role="tabpanel" aria-labelledby="tab-quality">
+              <div class="section-heading"><div><span class="panel-kicker">CHART QUALITY</span><h3 id="quality-status">Building</h3></div></div>
+              <p class="section-copy" id="quality-summary">Complete the required mappings to begin quality checks.</p>
+              <div class="chart-health" id="chart-health" aria-live="polite"></div>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div class="import-live hidden" id="import-live" role="status" aria-live="polite"><span id="import-live-text"></span><button class="button button-ghost" id="cancel-import-button" type="button">Cancel import</button></div>
+  <dialog id="import-settings-dialog" class="editor-dialog" aria-labelledby="import-settings-title">
+    <form id="import-settings-form">
+      <h2 id="import-settings-title">Interpret your dataset</h2>
+      <p class="section-copy">Change uncertain choices, then apply to re-import the source. Existing charts and stories reset only after a successful import.</p>
+      <label class="control-label" for="import-header-row">Header row (0 = first populated row)</label><input id="import-header-row" type="number" min="0" max="1000" value="0">
+      <label class="toggle-row"><input id="import-headerless" type="checkbox"> No header row — generate column names</label>
+      <label class="control-label" for="import-delimiter">Delimited text separator</label><select id="import-delimiter"><option value="auto">Detect automatically</option><option value=",">Comma</option><option value=";">Semicolon</option><option value="tab">Tab</option><option value="|">Pipe</option></select>
+      <label class="control-label" for="import-numeric-locale">Numeric convention</label><select id="import-numeric-locale"><option value="auto">Conservative detection</option><option value="decimal-dot">Decimal dot: 1,234.56</option><option value="decimal-comma">Decimal comma: 1.234,56</option></select>
+      <label class="control-label" for="import-date-order">Text date convention</label><select id="import-date-order"><option value="iso">ISO only: YYYY-MM-DD</option><option value="dmy">Day / month / year</option><option value="mdy">Month / day / year</option></select>
+      <label class="control-label" for="import-percent-scale">Bare values in percentage fields</label><select id="import-percent-scale"><option value="fraction">Fraction: 0.25 means 25%</option><option value="whole">Whole: 25 means 25%</option></select>
+      <p class="section-copy">Explicit % suffixes always use whole percentages. Text files use UTF-8. JSON tables use their property names as headers.</p>
+      <div class="dialog-actions"><button class="button button-ghost" id="close-import-settings" type="button">Cancel</button><button class="button button-primary" type="submit">Apply import settings</button></div>
+    </form>
+  </dialog>
+  <input type="file" id="project-input" accept=".prism.json,.json" hidden>
+  <input type="file" id="file-input" accept=".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.json,.ndjson,.jsonl" hidden>
+
+  <div class="drawer-backdrop hidden" id="drawer-backdrop"></div>
+  <aside class="preview-drawer" id="preview-drawer" aria-hidden="true" aria-label="Data preview">
+    <div class="drawer-header"><div><span class="panel-kicker">DATA PREVIEW</span><h2 id="preview-title">Workbook</h2></div><button class="icon-button" id="close-preview-button" type="button" aria-label="Close preview">×</button></div>
+    <div class="preview-summary" id="preview-summary"></div>
+    <div class="table-wrap"><table id="preview-table"></table></div>
+    <div class="drawer-footer">Showing the first 25 rows. All data remains in this browser tab.</div>
+  </aside>
+
+  <dialog class="prism-dialog" id="type-dialog">
+    <form method="dialog" id="type-form">
+      <div class="dialog-header"><div><span class="panel-kicker">SEMANTIC TYPE</span><h2 id="type-dialog-title">Change field type</h2></div><button class="icon-button" type="button" data-close-dialog="type-dialog" aria-label="Close type editor">×</button></div>
+      <p class="section-copy">Overrides are reversible. Invalid conversions become null and are shown before applying.</p>
+      <label class="control-label" for="type-select">Interpret as</label>
+      <div class="select-wrap"><select id="type-select"><option value="category">Text / category</option><option value="identifier">Identifier</option><option value="number">Number</option><option value="currency">Currency</option><option value="percent">Percent</option><option value="date">Date</option><option value="dateTime">Date &amp; time</option><option value="duration">Duration</option><option value="boolean">Boolean</option><option value="fiscalPeriod">Fiscal period</option><option value="geography">Geography</option><option value="url">URL</option><option value="email">Email</option><option value="freeText">Free text</option></select><span>⌄</span></div>
+      <div class="conversion-preview" id="conversion-preview"></div>
+      <div class="dialog-actions"><button class="button button-ghost hidden" id="reset-type-button" type="button">Use detected type</button><button class="button button-ghost" type="button" data-close-dialog="type-dialog">Cancel</button><button class="button button-primary" id="apply-type-button" type="submit">Apply type</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="prism-dialog" id="calculation-dialog">
+    <form method="dialog" id="calculation-form">
+      <div class="dialog-header"><div><span class="panel-kicker">CALCULATED FIELD</span><h2>Create a local formula</h2></div><button class="icon-button" type="button" data-close-dialog="calculation-dialog" aria-label="Close formula editor">×</button></div>
+      <label class="control-label" for="calculation-name">Name</label><input class="text-input" id="calculation-name" required>
+      <label class="control-label" for="calculation-expression">Formula</label><textarea class="formula-input" id="calculation-expression" rows="4" placeholder="[Split Amount (USD)] * [Probability (%)]" required></textarea>
+      <label class="control-label" for="calculation-type">Result type</label><div class="select-wrap"><select id="calculation-type"><option value="number">Number</option><option value="currency">Currency</option><option value="percent">Percent</option><option value="text">Text</option></select><span>⌄</span></div>
+      <div class="formula-help">Use field names in [brackets]. Supported: + − × ÷, comparisons, IF, COALESCE, ABS, ROUND, MIN, MAX, YEAR, MONTH, LOWER, UPPER, CONCAT.</div>
+      <div class="validation-box" id="calculation-validation"><span>i</span><p>Formula is checked before it is added.</p></div>
+      <div class="dialog-actions"><button class="button button-ghost" type="button" data-close-dialog="calculation-dialog">Cancel</button><button class="button button-primary" id="create-calculation-button" type="submit">Create field</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="prism-dialog wide-dialog" id="code-dialog">
+    <form method="dialog">
+      <div class="dialog-header"><div><span class="panel-kicker">GENERATED OUTPUT</span><h2>Plotly code</h2></div><button class="icon-button" type="button" data-close-dialog="code-dialog" aria-label="Close code">×</button></div>
+      <p class="section-copy">Generated after your chart is complete. Copy it into any page that loads Plotly.js 3.1.0.</p>
+      <textarea class="formula-input code-output" id="plotly-code-output" rows="20" spellcheck="false" aria-label="Generated Plotly code"></textarea>
+      <div class="dialog-actions"><button class="button button-ghost" id="download-code-button" type="button">Download HTML</button><button class="button button-primary" id="copy-code-button" type="button">Copy code</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="prism-dialog" id="publish-dialog">
+    <form id="publish-form">
+      <div class="dialog-header"><div><span class="panel-kicker">EXECUTIVE BRIEFING</span><h2>Publish the story</h2></div><button class="icon-button" type="button" data-close-dialog="publish-dialog" aria-label="Close publishing">×</button></div>
+      <p class="section-copy">Recipients open a crisp, interactive 3D briefing in any modern browser. The workbook is never uploaded—only the chart-ready figure and story below.</p>
+      <label class="control-label" for="briefing-title">Briefing title</label><input class="text-input" id="briefing-title" required maxlength="140">
+      <label class="control-label" for="briefing-takeaway">What should leaders notice?</label><textarea class="formula-input" id="briefing-takeaway" rows="3" maxlength="1000" required placeholder="Lead with the decision, risk, or opportunity."></textarea>
+      <div class="dual-controls"><label><span class="control-label">Freshness</span><input class="text-input" id="briefing-freshness" placeholder="Updated Q3 FY26"></label><label><span class="control-label">Key metric</span><input class="text-input" id="briefing-metric" placeholder="$84M pipeline"></label></div>
+      <label class="toggle-row"><div><strong>Explore the data</strong><span>Let recipients rotate, zoom, hover, reset, and inspect the figure.</span></div><input type="checkbox" id="briefing-explore" checked><i></i></label>
+      <div class="publish-result hidden" id="publish-result" aria-live="polite"></div>
+      <div class="dialog-actions"><button class="button button-ghost" type="button" data-close-dialog="publish-dialog">Cancel</button><button class="button button-primary" id="publish-submit" type="submit">Create secure link</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="prism-dialog story-dialog" id="story-dialog">
+    <form id="story-form">
+      <div class="dialog-header"><div><span class="panel-kicker">STORY CHAPTER</span><h2 id="story-dialog-title">Capture this scene</h2></div><button class="icon-button" type="button" data-close-dialog="story-dialog" aria-label="Close Story Builder">×</button></div>
+      <p class="section-copy">Prism saves the active chart, filters, and exact camera angle with this chapter.</p>
+      <input id="story-chapter-id" type="hidden">
+      <label class="control-label" for="story-title-input">Chapter title</label><input class="text-input" id="story-title-input" maxlength="120" required placeholder="FY27 opportunity concentration">
+      <label class="control-label" for="story-takeaway-input">Executive takeaway</label><textarea class="formula-input" id="story-takeaway-input" rows="3" maxlength="320" placeholder="State the decision or insight in one clear sentence."></textarea>
+      <div class="dual-controls"><label><span class="control-label">Chart annotation</span><input class="text-input" id="story-annotation-input" maxlength="320" placeholder="What should the audience inspect?"></label><label><span class="control-label">Recommended action</span><input class="text-input" id="story-action-input" maxlength="240" placeholder="What happens next?"></label></div>
+      <fieldset class="story-style-editor">
+        <legend class="control-label">Presentation style</legend>
+        <div class="story-style-grid">
+          <label><span class="control-label">Font</span><div class="select-wrap"><select id="story-font-select"><option value="system">System</option><option value="editorial">Editorial</option><option value="rounded">Rounded</option><option value="mono">Monospaced</option></select><span>⌄</span></div></label>
+          <label><span class="control-label">Arrangement</span><div class="select-wrap"><select id="story-layout-select"><option value="narrative-left">Narrative left</option><option value="chart-focus">Chart focus</option><option value="metrics-first">Metrics first</option></select><span>⌄</span></div></label>
+          <label><span class="control-label">Accent</span><input class="story-color-input" id="story-accent-input" type="color" value="#175CD3"></label>
+          <label><span class="control-label">Text</span><input class="story-color-input" id="story-text-input" type="color" value="#101828"></label>
+          <label><span class="control-label">Surface</span><input class="story-color-input" id="story-surface-input" type="color" value="#FFFFFF"></label>
+        </div>
+      </fieldset>
+      <section class="story-insights" aria-labelledby="story-insight-heading">
+        <div class="story-insights-heading"><div><span class="control-label" id="story-insight-heading">Chart signals</span><p>Deterministic suggestions from rendered values—not AI-generated claims.</p></div><button class="button button-ghost compact-button" id="refresh-story-insights" type="button">Analyze chart</button></div>
+        <div class="story-insight-list" id="story-insight-list"><span class="story-insight-empty">Analyze the chart to check its rendered range and potential outliers.</span></div>
+      </section>
+      <div class="story-metric-editor">
+        <span class="control-label">Supporting metrics · optional</span>
+        <div class="story-metric-row"><input class="text-input" id="story-metric-label-1" maxlength="80" placeholder="Metric label"><input class="text-input" id="story-metric-value-1" maxlength="80" placeholder="$84M"></div>
+        <div class="story-metric-row"><input class="text-input" id="story-metric-label-2" maxlength="80" placeholder="Metric label"><input class="text-input" id="story-metric-value-2" maxlength="80" placeholder="62%"></div>
+        <div class="story-metric-row"><input class="text-input" id="story-metric-label-3" maxlength="80" placeholder="Metric label"><input class="text-input" id="story-metric-value-3" maxlength="80" placeholder="3.7×"></div>
+      </div>
+      <div class="dialog-actions story-dialog-actions"><button class="button button-danger hidden" id="delete-story-chapter-button" type="button">Delete chapter</button><span class="dialog-action-spacer"></span><button class="button button-ghost" type="button" data-close-dialog="story-dialog">Cancel</button><button class="button button-primary" id="save-story-chapter-button" type="submit">Save chapter</button></div>
+    </form>
+  </dialog>
+
+  <section class="story-presenter hidden" id="story-presenter" aria-label="Story presentation" aria-hidden="true">
+    <header class="story-presenter-header">
+      <div class="brand-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">PRISM</div><div class="brand-subtitle">Story presentation</div></div></div>
+      <div class="story-presenter-progress" id="story-presenter-progress">1 of 1</div>
+      <button class="button button-ghost" id="close-story-presenter" type="button">Close presentation</button>
+    </header>
+    <div class="story-presenter-stage">
+      <article class="story-presenter-copy"><span class="panel-kicker" id="story-presenter-kicker">CHAPTER 01</span><h1 id="story-presenter-title">Opening view</h1><p id="story-presenter-takeaway"></p><div class="story-presenter-metrics" id="story-presenter-metrics"></div><div class="story-presenter-note hidden" id="story-presenter-note"></div></article>
+      <div class="story-presenter-chart"><div id="story-presenter-plot" role="img" aria-label="Presented interactive 3D chart"></div></div>
+    </div>
+    <footer class="story-presenter-footer"><button class="button button-ghost" id="story-previous-button" type="button">Previous</button><div id="story-presenter-dots" class="story-presenter-dots" aria-label="Story chapters"></div><button class="button button-primary" id="story-next-button" type="button">Next</button></footer>
+  </section>
+
+  <div class="toast-region" id="toast-region" aria-live="polite"></div>
+
+  <script src="./node_modules/xlsx/dist/xlsx.full.min.js" data-inline="xlsx"></script>
+  <script id="prism-plotly-runtime" src="./node_modules/plotly.js-dist-min/plotly.min.js" data-inline="plotly"></script>
+  <script type="module" src="./src/app.js" data-inline="app"></script>
+</body>
+</html>

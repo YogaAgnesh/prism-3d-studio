@@ -1,0 +1,21 @@
+{
+  "name": "prism-3d-visualization-studio",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-isolation=none tests/*.test.js",
+    "build": "node scripts/build.mjs",
+    "test:browser": "node tests/browser/smoke.mjs",
+    "test:universal": "node tests/browser/universal.mjs",
+    "verify": "npm run build && npm test && npm run test:browser",
+    "verify:release": "npm run build && npm test && npm run test:browser && npm run test:universal"
+  },
+  "dependencies": {
+    "plotly.js-dist-min": "3.1.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.9"
+  }
+}
