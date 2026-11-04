@@ -1,0 +1,33 @@
+{
+  "product": "Prism",
+  "version": 2,
+  "dataSignature": {
+    "fields": [
+      { "id": "old-stage", "label": "Stage", "semanticType": "category", "type": "text" },
+      { "id": "old-geo", "label": "Geography", "semanticType": "geography", "type": "text" },
+      { "id": "old-amount", "label": "Total Global Opportunity Amount (USD)", "semanticType": "currency", "type": "currency" }
+    ]
+  },
+  "workspace": {
+    "theme": "dark",
+    "mode": "guided",
+    "filters": [],
+    "calculations": [],
+    "charts": [
+      {
+        "id": "saved-first",
+        "chartType": "columns3d",
+        "title": "Imported first chart",
+        "mappings": { "x": "old-stage", "y": "old-geo", "z": "old-amount" },
+        "settings": { "palette": "sunset", "aggregation": "sum" }
+      },
+      {
+        "id": "saved-second",
+        "chartType": "lollipop3d",
+        "title": "Imported second chart",
+        "mappings": { "x": "old-stage", "y": "old-geo", "z": "old-amount" },
+        "settings": { "palette": "electric", "aggregation": "average" }
+      }
+    ]
+  }
+}
